@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ChatterMorph</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module">
+			const translatorAPI = import.meta.env.VITE_TRANSLATOR_API_KEY;
+			if (translatorAPI) {
+				const meta = document.createElement("meta");
+				meta.httpEquiv = "origin-trial";
+				meta.content = translatorAPI;
+				document.head.appendChild(meta);
+			}
+			const languageDetectionAPI = import.meta.env
+				.VITE_LANGUAGE_DETECTION_API_KEY;
+			if (languageDetectionAPI) {
+				const meta = document.createElement("meta");
+				meta.httpEquiv = "origin-trial";
+				meta.content = languageDetectionAPI;
+				document.head.appendChild(meta);
+			}
+			const summarizationAPI = import.meta.env.VITE_SUMMARIZATION_API_KEY;
+			if (summarizationAPI) {
+				const meta = document.createElement("meta");
+				meta.httpEquiv = "origin-trial";
+				meta.content = summarizationAPI;
+				document.head.appendChild(meta);
+			}
+		</script>
+		<script type="module" src="/src/main.jsx"></script>
+	</body>
+</html>
