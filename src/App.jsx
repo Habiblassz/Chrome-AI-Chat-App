@@ -1,13 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useMemo,
+	useCallback,
+} from "react";
 import "./App.css";
 
-// SVG Arrow Icon for Send Button
 const SendIcon = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="24"
 		height="24"
-		viewBox="0 0 24 24"
+		viewBox="0 0 27 24"
 		fill="none"
 		stroke="currentColor"
 		strokeWidth="2"
@@ -26,15 +31,21 @@ const App = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [wordCount, setWordCount] = useState(0);
-	const [showLanding, setShowLanding] = useState(true); // Control landing page visibility
+	const [showLanding, setShowLanding] = useState(true);
 	const chatEndRef = useRef(null);
+	const textareaRef = useRef(null);
 
-	// Auto-scroll to the bottom of the chat
 	useEffect(() => {
 		if (chatEndRef.current) {
 			chatEndRef.current.scrollIntoView({ behavior: "smooth" });
 		}
 	}, [messages]);
+
+	useEffect(() => {
+		if (!showLanding && textareaRef.current) {
+			textareaRef.current.focus();
+		}
+	}, [showLanding]);
 
 	const handleInputChange = (e) => {
 		const text = e.target.value;
@@ -42,7 +53,7 @@ const App = () => {
 		setWordCount(text.split(/\s+/).filter((word) => word.length > 0).length);
 	};
 
-	const detectLanguage = async (text) => {
+	const detectLanguage = useCallback(async (text) => {
 		if (!text.trim()) return;
 
 		try {
@@ -54,9 +65,9 @@ const App = () => {
 		} catch (err) {
 			setError("An error occurred while detecting the language.");
 		}
-	};
+	}, []);
 
-	const handleSend = async () => {
+	const handleSend = useCallback(async () => {
 		if (!inputText.trim()) {
 			setError("Please enter some text.");
 			return;
@@ -66,32 +77,34 @@ const App = () => {
 		setError("");
 
 		try {
-			// Add user message to the chat
+			const timestamp = new Date().toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
 			setMessages((prev) => [
 				...prev,
 				{
 					text: inputText,
 					sender: "user",
-					timestamp: new Date().toLocaleTimeString(),
+					timestamp,
 				},
 			]);
 
-			// Detect Language
 			await detectLanguage(inputText);
+			setInputText("");
 		} catch (err) {
 			setError("An error occurred while processing your request.");
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [inputText, detectLanguage]);
 
-	const handleSummarize = async () => {
+	const handleSummarize = useCallback(async () => {
 		if (wordCount < 150) {
 			setError("Summarize requires at least 150 words.");
 			return;
 		}
 
-		// Summarizer API only supports English during the origin trial
 		if (detectedLanguage !== "en") {
 			setError(
 				"Summarize only works for English text during the origin trial."
@@ -107,44 +120,51 @@ const App = () => {
 				const summarizer = await self.ai.summarizer.create();
 				const summaryResult = await summarizer.summarize(inputText);
 
-				// Add AI summary to the chat
+				const timestamp = new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				});
 				setMessages((prev) => [
 					...prev,
 					{
 						text: summaryResult,
 						sender: "ai",
-						timestamp: new Date().toLocaleTimeString(),
+						timestamp,
 					},
 				]);
+				setInputText("");
 			}
 		} catch (err) {
 			setError("An error occurred while summarizing the text.");
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [inputText, wordCount, detectedLanguage]);
 
-	const handleTranslate = async () => {
+	const handleTranslate = useCallback(async () => {
 		if (!inputText.trim()) {
 			setError("Please enter some text to translate.");
 			return;
 		}
 
-		// Detect language if not already detected
 		if (!detectedLanguage) {
 			await detectLanguage(inputText);
 		}
 
-		// If translating to the same language, return the input text
 		if (detectedLanguage === selectedLanguage) {
+			const timestamp = new Date().toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
 			setMessages((prev) => [
 				...prev,
 				{
 					text: inputText,
 					sender: "ai",
-					timestamp: new Date().toLocaleTimeString(),
+					timestamp,
 				},
 			]);
+			setInputText("");
 			return;
 		}
 
@@ -154,46 +174,57 @@ const App = () => {
 		try {
 			if ("ai" in self && "translator" in self.ai) {
 				const translator = await self.ai.translator.create({
-					sourceLanguage: detectedLanguage || "en", // Fallback to English if no language is detected
+					sourceLanguage: detectedLanguage || "en",
 					targetLanguage: selectedLanguage,
 				});
 				const translationResult = await translator.translate(inputText);
 
-				// Add AI translation to the chat
+				const timestamp = new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				});
 				setMessages((prev) => [
 					...prev,
 					{
 						text: translationResult,
 						sender: "ai",
-						timestamp: new Date().toLocaleTimeString(),
+						timestamp,
 					},
 				]);
+				setInputText("");
 			}
 		} catch (err) {
 			setError("An error occurred while translating the text.");
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [inputText, detectedLanguage, selectedLanguage, detectLanguage]);
 
-	const handleClear = () => {
+	const handleClear = useCallback(() => {
 		setInputText("");
 		setMessages([]);
 		setDetectedLanguage("");
 		setError("");
 		setWordCount(0);
-	};
+	}, []);
 
-	const handleGetStarted = () => {
-		setShowLanding(false); // Hide landing page and show the app
-	};
+	const handleGetStarted = useCallback(() => {
+		setShowLanding(false);
+	}, []);
+
+	const formattedMessages = useMemo(() => {
+		return messages.map((msg) => ({
+			...msg,
+			timestamp: msg.timestamp,
+		}));
+	}, [messages]);
 
 	return (
 		<div className="app">
 			{showLanding ? (
 				<div className="landing-page">
 					<div className="hero-section">
-						<h1>AI-Powered Text Processing</h1>
+						<h1>ChatterMorph</h1>
 						<p>Summarize, translate, and detect languages with ease.</p>
 						<button onClick={handleGetStarted}>Get Started</button>
 					</div>
@@ -215,15 +246,15 @@ const App = () => {
 						</div>
 					</div>
 					<div className="footer">
-						<p>© 2023 AI Text Processor. All rights reserved.</p>
+						<p>© 2025 ChatterMorph. All rights reserved.</p>
 					</div>
 				</div>
 			) : (
-				<>
-					<h1>AI-Powered Text Processing</h1>
+				<div className="chat-container">
+					<h1>ChatterMorph</h1>
 					<div className="chat-interface">
 						<div className="chat-window">
-							{messages.map((msg, index) => (
+							{formattedMessages.map((msg, index) => (
 								<div
 									key={index}
 									className={`message ${
@@ -238,7 +269,11 @@ const App = () => {
 							{isLoading && (
 								<div className="message ai-message">
 									<div className="message-content">
-										<p className="typing-indicator">AI is typing...</p>
+										<div className="typing-indicator">
+											<span className="dot"></span>
+											<span className="dot"></span>
+											<span className="dot"></span>
+										</div>
 									</div>
 								</div>
 							)}
@@ -247,6 +282,7 @@ const App = () => {
 						<div className="input-area">
 							<div className="textarea-container">
 								<textarea
+									ref={textareaRef}
 									value={inputText}
 									onChange={handleInputChange}
 									placeholder="Type your message..."
@@ -281,13 +317,16 @@ const App = () => {
 								disabled={isLoading || wordCount < 150}>
 								Summarize
 							</button>
-							<button onClick={handleClear} disabled={isLoading}>
+							<button
+								onClick={handleClear}
+								className="clear"
+								disabled={isLoading}>
 								Clear
 							</button>
 						</div>
 						{error && <div className="error-message">{error}</div>}
 					</div>
-				</>
+				</div>
 			)}
 		</div>
 	);

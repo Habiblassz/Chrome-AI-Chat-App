@@ -1,4 +1,8 @@
-/* General Styles */
+:root {
+	--primary-color: #046d00;
+	--hover-color: #198b15ba;
+}
+
 body {
 	font-family: "Arial", sans-serif;
 	background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
@@ -12,21 +16,20 @@ body {
 
 .app {
 	background: #fff;
-	border-radius: 15px;
+	border-radius: 1rem;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-	padding: 25px;
+	padding: 1.5rem;
 	width: 90%;
-	max-width: 800px;
+	max-width: 50rem;
 	animation: fadeIn 1s ease-in-out;
 }
 
-/* Landing Page */
 .landing-page {
 	text-align: center;
 }
 
 .hero-section {
-	margin-bottom: 40px;
+	margin-bottom: 2.5rem;
 }
 
 .hero-section h1 {
@@ -43,22 +46,22 @@ body {
 
 .hero-section button {
 	padding: 10px 20px;
-	background: #007bff;
+	background: var(--primary-color);
 	color: #fff;
 	border: none;
 	border-radius: 8px;
 	cursor: pointer;
 	font-size: 1em;
-	transition: background 0.3s ease, transform 0.2s ease;
+	transition: all 0.3s ease;
 }
 
 .hero-section button:hover {
-	background: #0056b3;
-	transform: translateY(-2px);
+	opacity: 0.7;
+	transform: scale(0.97);
 }
 
 .features-section {
-	margin-bottom: 40px;
+	margin-bottom: 2.5rem;
 }
 
 .features-section h2 {
@@ -80,11 +83,11 @@ body {
 	padding: 20px;
 	width: 30%;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	transition: transform 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 .feature-card:hover {
-	transform: translateY(-10px);
+	transform: scale(0.97);
 }
 
 .feature-card h3 {
@@ -101,10 +104,17 @@ body {
 .footer {
 	font-size: 0.9rem;
 	color: #666;
-	margin-top: 40px;
+	margin-top: 2.5rem;
 }
 
-/* Chat Interface */
+.chat-container {
+	animation: grow 1.2s ease;
+}
+
+.chat-container h1 {
+	text-align: center;
+}
+
 .chat-interface {
 	display: flex;
 	flex-direction: column;
@@ -118,7 +128,7 @@ body {
 	border: 1px solid #ddd;
 	border-radius: 0.6rem;
 	padding: 1.3rem;
-	height: 14rem;
+	height: 20rem;
 	overflow-y: auto;
 	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -129,39 +139,70 @@ body {
 }
 
 .message-content {
-	max-width: 9rem;
+	max-width: 30rem;
 	padding: 10px;
 	border-radius: 10px;
 	position: relative;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-message .message-content {
-	background: #007bff;
+	max-width: 16rem;
+	background: var(--primary-color);
 	color: #fff;
 	margin-left: auto;
-	animation: slideIn 1s ease;
+	animation: fadeIn 1s ease-in;
 }
 
 .ai-message .message-content {
-	background: #e1e1e1;
-	color: #333;
+	max-width: 16rem;
+	background: #111fb2c2;
+	color: #e1e1e1;
 	margin-right: auto;
-	animation: slideIn 1s ease;
+	animation: fadeIn 1s ease-in;
 }
 
 .timestamp {
 	font-size: 0.8em;
-	color: #666;
+	color: #f2f2f2;
 	display: block;
 	margin-top: 5px;
 }
 
 .typing-indicator {
-	font-style: italic;
-	color: #666;
+	display: flex;
+	align-items: center;
+	gap: 4px;
 }
 
-/* Input Area */
+.typing-indicator .dot {
+	width: 6px;
+	height: 6px;
+	background: #fff;
+	border-radius: 50%;
+	animation: typing 1.2s infinite;
+}
+
+.typing-indicator .dot:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes typing {
+	0% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
 .input-area {
 	display: flex;
 	flex-direction: column;
@@ -174,26 +215,32 @@ body {
 
 textarea {
 	flex: 1;
-	padding: 0.35rem 1rem;
+	padding: 0.6rem 0 0 1rem;
 	border: 1px solid #ddd;
 	border-radius: 10px;
-	font-size: 0.7rem;
+	font-size: 0.73rem;
 	resize: none;
 	height: 2rem;
 	transition: border-color 0.3s ease;
 	width: 25rem;
-	padding-right: 2.5rem; /* Space for the send button */
+	padding-right: 2.7rem;
 }
 
 textarea:focus {
-	border-color: #007bff;
+	border-color: var(--primary-color);
 	outline: none;
+}
+
+.textarea-container button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .send-button {
 	position: absolute;
 	right: 0.5rem;
-	top: 0.5rem;
+	top: 0.3rem;
 	background: none;
 	border: none;
 	cursor: pointer;
@@ -201,14 +248,13 @@ textarea:focus {
 }
 
 .send-button svg {
-	width: 1.5rem;
-	height: 1.5rem;
-	color: #007bff;
-	transition: color 0.3s ease;
+	color: #fff;
+	transition: all 0.3s ease;
+	padding: 5px;
 }
 
 .send-button:hover svg {
-	color: #0056b3;
+	color: #fff;
 	transform: scale(0.9);
 }
 
@@ -223,7 +269,6 @@ textarea:focus {
 	text-align: right;
 }
 
-/* Actions */
 .actions {
 	display: flex;
 	gap: 10px;
@@ -241,24 +286,32 @@ select {
 }
 
 select:focus {
-	border-color: #007bff;
+	border-color: var(--primary-color);
 	outline: none;
 }
 
 .actions button {
 	padding: 10px 20px;
-	background: #007bff;
+	background: var(--primary-color);
 	color: #fff;
 	border: none;
 	border-radius: 8px;
 	cursor: pointer;
 	font-size: 1em;
-	transition: background 0.3s ease, transform 0.2s ease;
+	transition: all 0.2s ease;
+}
+
+.actions button.clear {
+	background: red;
+}
+.actions button.clear:hover {
+	opacity: 0.8;
+	background: red;
 }
 
 .actions button:hover {
-	background: #0056b3;
-	transform: translateY(-2px);
+	opacity: 0.7;
+	transform: scale(0.95);
 }
 
 .actions button:disabled {
@@ -267,7 +320,6 @@ select:focus {
 	transform: none;
 }
 
-/* Error Message */
 .error-message {
 	background: #ffebee;
 	color: #c62828;
@@ -279,7 +331,6 @@ select:focus {
 	margin-bottom: -4.4rem;
 }
 
-/* Animations */
 @keyframes fadeIn {
 	from {
 		opacity: 0;
@@ -299,5 +350,151 @@ select:focus {
 	to {
 		opacity: 1;
 		transform: translateX(0);
+	}
+}
+@keyframes grow {
+	from {
+		opacity: 0;
+		transform: scale(0);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+	}
+
+	.app {
+		background: #2d2d44;
+		color: #fff;
+	}
+	.app h1,
+	.app .hero-section p,
+	.features-section h2 {
+		color: #fff;
+	}
+
+	.chat-window {
+		background: #3a3a4d;
+		border-color: #555;
+	}
+
+	.message-content {
+		background: #555;
+		color: #fff;
+	}
+
+	.ai-message .message-content {
+		background: #444;
+		color: #fff;
+	}
+
+	.timestamp {
+		color: #aaa;
+	}
+
+	textarea {
+		background: #444;
+		color: #fff;
+		border-color: #555;
+	}
+
+	textarea:focus {
+		border-color: var(--primary-color);
+	}
+
+	.send-button svg {
+		color: #fff;
+	}
+
+	.send-button:hover svg {
+		color: var(--primary-color);
+	}
+
+	.send-button:disabled svg {
+		color: #ccc;
+	}
+
+	select {
+		background: #444;
+		color: #fff;
+		border-color: #555;
+	}
+
+	select:focus {
+		border-color: var(--primary-color);
+	}
+
+	.actions button {
+		background: var(--primary-color);
+		color: #fff;
+	}
+
+	.actions button:hover {
+		background: var(--primary-color);
+	}
+
+	.actions button:disabled {
+		color: #090909;
+		background: #ccc;
+	}
+
+	.error-message {
+		background: #ffebee;
+		color: #c62828;
+	}
+}
+
+@media (max-width: 600px) {
+	.app {
+		padding: 1rem;
+	}
+
+	.feature-cards {
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+	}
+
+	.feature-card {
+		padding: 1rem;
+	}
+
+	.chat-window {
+		height: 15rem;
+	}
+
+	textarea {
+		height: 1.5rem;
+		font-size: 0.6rem;
+		width: 20rem;
+	}
+
+	.actions {
+		/* flex-wrap: nowrap; */
+		gap: 0.8rem;
+	}
+
+	.actions button {
+		padding: 8px 15px;
+		font-size: 0.8rem;
+	}
+
+	select {
+		padding: 0.8rem;
+		font-size: 0.8rem;
+	}
+}
+
+@media (max-width: 500) {
+	.app {
+		max-width: 22rem;
+	}
+	textarea {
+		width: 18rem;
 	}
 }
