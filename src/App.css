@@ -467,6 +467,7 @@ select:focus {
 @media (max-width: 600px) {
 	.app {
 		padding: 1rem;
+		padding-top: 3rem;
 	}
 
 	.feature-cards {
