@@ -304,6 +304,9 @@ select:focus {
 .actions button.clear {
 	background: red;
 }
+.actions button.clear:disabled {
+	background: #ccc !important;
+}
 .actions button.clear:hover {
 	opacity: 0.8;
 	background: red;
