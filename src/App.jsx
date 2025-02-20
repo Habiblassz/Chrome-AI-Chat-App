@@ -241,11 +241,6 @@ const App = () => {
 				const translator = await self.ai.translator.create({
 					sourceLanguage: sourceLang,
 					targetLanguage: selectedLanguage,
-					monitor(m) {
-						m.addEventListener("downloadprogress", (e) => {
-							console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
-						});
-					},
 				});
 
 				// Translate the text
