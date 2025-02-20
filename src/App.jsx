@@ -1,10 +1,4 @@
-import React, {
-	useState,
-	useEffect,
-	useRef,
-	useMemo,
-	useCallback,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
 
 const SendIcon = () => (
@@ -59,7 +53,8 @@ const App = () => {
 	const handleInputChange = (e) => {
 		const text = e.target.value;
 		setInputText(text);
-		setWordCount(text.split(/\s+/).filter((word) => word.length > 0).length);
+		const words = text.match(/\b\w+\b/g) || [];
+		setWordCount(words.length);
 	};
 
 	const detectLanguage = useCallback(async (text) => {
@@ -70,6 +65,8 @@ const App = () => {
 				const languageDetector = await self.ai.languageDetector.create();
 				const detectionResults = await languageDetector.detect(text);
 				setDetectedLanguage(detectionResults[0].detectedLanguage);
+			} else {
+				setError("Language detection is not supported in this environment.");
 			}
 		} catch (err) {
 			setError("An error occurred while detecting the language.");
@@ -77,13 +74,13 @@ const App = () => {
 	}, []);
 
 	const handleSend = useCallback(async () => {
+		setError(""); // Clear error state
 		if (!inputText.trim()) {
 			setError("Please enter some text.");
 			return;
 		}
 
 		setIsLoading(true);
-		setError("");
 
 		try {
 			const timestamp = new Date().toLocaleTimeString([], {
@@ -110,17 +107,20 @@ const App = () => {
 	}, [inputText, detectLanguage]);
 
 	const handleSummarize = useCallback(async () => {
+		setError("");
 		if (wordCount < 150) {
 			setError("Summarize requires at least 150 words.");
 			return;
 		}
 
 		setIsLoading(true);
-		setError("");
 
 		try {
-			// Ensure language detection is complete
-			await detectLanguage(inputText);
+			await detectLanguage(inputText); // Ensure language detection is complete
+			if (!detectedLanguage) {
+				setError("Unable to detect language.");
+				return;
+			}
 
 			// Fallback: If detectedLanguage is not "en", check for common English words
 			if (detectedLanguage !== "en") {
@@ -150,7 +150,6 @@ const App = () => {
 				}
 			}
 
-			// Proceed with summarization
 			if ("ai" in self && "summarizer" in self.ai) {
 				const summarizer = await self.ai.summarizer.create();
 				const summaryResult = await summarizer.summarize(inputText);
@@ -169,6 +168,8 @@ const App = () => {
 				]);
 				setInputText("");
 				setWordCount(0);
+			} else {
+				setError("Summarization is not supported in this environment.");
 			}
 		} catch (err) {
 			setError("An error occurred while summarizing the text.");
@@ -177,31 +178,22 @@ const App = () => {
 		}
 	}, [inputText, wordCount, detectedLanguage, detectLanguage]);
 
-	useEffect(() => {
-		if (detectedLanguage && inputText.trim()) {
-			handleTranslate();
-		}
-	}, [detectedLanguage]);
-
 	const handleTranslate = useCallback(async () => {
+		setError("");
 		if (!inputText.trim()) {
 			setError("Please enter some text to translate.");
 			return;
 		}
 
 		setIsLoading(true);
-		setError("");
 
 		try {
-			// Ensure language detection is complete
 			if (!detectedLanguage) {
 				await detectLanguage(inputText);
 			}
 
-			// Fallback: If detectedLanguage is still not set, assume English
 			const sourceLang = detectedLanguage || "en";
 
-			// Check if source and target languages are the same
 			if (sourceLang === selectedLanguage) {
 				const timestamp = new Date().toLocaleTimeString([], {
 					hour: "2-digit",
@@ -230,7 +222,7 @@ const App = () => {
 						selectedLanguage
 					);
 
-				if (languagePairSupport === "no") {
+				if (!languagePairSupport) {
 					setError(
 						`Translation from ${sourceLang} to ${selectedLanguage} is not supported.`
 					);
@@ -261,6 +253,8 @@ const App = () => {
 				]);
 				setInputText("");
 				setWordCount(0);
+			} else {
+				setError("Translation is not supported in this environment.");
 			}
 		} catch (err) {
 			setError("An error occurred while translating the text.");
@@ -280,13 +274,6 @@ const App = () => {
 	const handleGetStarted = useCallback(() => {
 		setShowLanding(false);
 	}, []);
-
-	const formattedMessages = useMemo(() => {
-		return messages.map((msg) => ({
-			...msg,
-			timestamp: msg.timestamp,
-		}));
-	}, [messages]);
 
 	return (
 		<div className="app">
@@ -323,7 +310,7 @@ const App = () => {
 					<h1>ChatterMorph</h1>
 					<div className="chat-interface">
 						<div className="chat-window">
-							{formattedMessages.map((msg, index) => (
+							{messages.map((msg, index) => (
 								<div
 									key={index}
 									className={`message ${
