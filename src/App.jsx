@@ -168,6 +168,7 @@ const App = () => {
 					},
 				]);
 				setInputText("");
+				setWordCount(0);
 			}
 		} catch (err) {
 			setError("An error occurred while summarizing the text.");
@@ -176,30 +177,15 @@ const App = () => {
 		}
 	}, [inputText, wordCount, detectedLanguage, detectLanguage]);
 
+	useEffect(() => {
+		if (detectedLanguage && inputText.trim()) {
+			handleTranslate();
+		}
+	}, [detectedLanguage]);
+
 	const handleTranslate = useCallback(async () => {
 		if (!inputText.trim()) {
 			setError("Please enter some text to translate.");
-			return;
-		}
-
-		if (!detectedLanguage) {
-			await detectLanguage(inputText);
-		}
-
-		if (detectedLanguage === selectedLanguage) {
-			const timestamp = new Date().toLocaleTimeString([], {
-				hour: "2-digit",
-				minute: "2-digit",
-			});
-			setMessages((prev) => [
-				...prev,
-				{
-					text: inputText,
-					sender: "ai",
-					timestamp,
-				},
-			]);
-			setInputText("");
 			return;
 		}
 
@@ -207,13 +193,65 @@ const App = () => {
 		setError("");
 
 		try {
-			if ("ai" in self && "translator" in self.ai) {
-				const translator = await self.ai.translator.create({
-					sourceLanguage: detectedLanguage || "en",
-					targetLanguage: selectedLanguage,
+			// Ensure language detection is complete
+			if (!detectedLanguage) {
+				await detectLanguage(inputText);
+			}
+
+			// Fallback: If detectedLanguage is still not set, assume English
+			const sourceLang = detectedLanguage || "en";
+
+			// Check if source and target languages are the same
+			if (sourceLang === selectedLanguage) {
+				const timestamp = new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
 				});
+				setMessages((prev) => [
+					...prev,
+					{
+						text: inputText,
+						sender: "ai",
+						timestamp,
+					},
+				]);
+				setInputText("");
+				setWordCount(0);
+				return;
+			}
+
+			// Proceed with translation
+			if ("ai" in self && "translator" in self.ai) {
+				// Check if the language pair is supported
+				const translatorCapabilities = await self.ai.translator.capabilities();
+				const languagePairSupport =
+					translatorCapabilities.languagePairAvailable(
+						sourceLang,
+						selectedLanguage
+					);
+
+				if (languagePairSupport === "no") {
+					setError(
+						`Translation from ${sourceLang} to ${selectedLanguage} is not supported.`
+					);
+					return;
+				}
+
+				// Create the translator
+				const translator = await self.ai.translator.create({
+					sourceLanguage: sourceLang,
+					targetLanguage: selectedLanguage,
+					monitor(m) {
+						m.addEventListener("downloadprogress", (e) => {
+							console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
+						});
+					},
+				});
+
+				// Translate the text
 				const translationResult = await translator.translate(inputText);
 
+				// Display the final translation
 				const timestamp = new Date().toLocaleTimeString([], {
 					hour: "2-digit",
 					minute: "2-digit",
