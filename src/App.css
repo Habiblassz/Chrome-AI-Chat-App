@@ -323,6 +323,18 @@ select:focus {
 	transform: none;
 }
 
+.error-message1 {
+	background: #ffebee;
+	color: #c62828;
+	padding: 10px;
+	border-radius: 8px;
+	text-align: center;
+	margin-top: 0.8rem !important;
+	animation: slideIn 0.3s ease-in;
+	max-width: 90%;
+	margin: auto;
+}
+
 .error-message {
 	background: #ffebee;
 	color: #c62828;

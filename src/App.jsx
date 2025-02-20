@@ -32,8 +32,17 @@ const App = () => {
 	const [error, setError] = useState("");
 	const [wordCount, setWordCount] = useState(0);
 	const [showLanding, setShowLanding] = useState(true);
+	const [browserSupported, setBrowserSupported] = useState(true);
 	const chatEndRef = useRef(null);
 	const textareaRef = useRef(null);
+
+	useEffect(() => {
+		const userAgent = navigator.userAgent;
+		const isChrome = /Chrome/.test(userAgent) && !/Edg/.test(userAgent);
+		if (!isChrome) {
+			setBrowserSupported(false);
+		}
+	}, []);
 
 	useEffect(() => {
 		if (chatEndRef.current) {
@@ -92,6 +101,7 @@ const App = () => {
 
 			await detectLanguage(inputText);
 			setInputText("");
+			setWordCount(0);
 		} catch (err) {
 			setError("An error occurred while processing your request.");
 		} finally {
@@ -133,6 +143,7 @@ const App = () => {
 					},
 				]);
 				setInputText("");
+				setWordCount(0);
 			}
 		} catch (err) {
 			setError("An error occurred while summarizing the text.");
@@ -192,6 +203,7 @@ const App = () => {
 					},
 				]);
 				setInputText("");
+				setWordCount(0);
 			}
 		} catch (err) {
 			setError("An error occurred while translating the text.");
@@ -324,6 +336,12 @@ const App = () => {
 								Clear
 							</button>
 						</div>
+						{!browserSupported && (
+							<div className="error-message1">
+								Your browser is not supported. Please use Chrome for the best
+								experience.
+							</div>
+						)}
 						{error && <div className="error-message">{error}</div>}
 					</div>
 				</div>
