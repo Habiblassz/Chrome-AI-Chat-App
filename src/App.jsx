@@ -115,17 +115,42 @@ const App = () => {
 			return;
 		}
 
-		if (detectedLanguage !== "en") {
-			setError(
-				"Summarize only works for English text during the origin trial."
-			);
-			return;
-		}
-
 		setIsLoading(true);
 		setError("");
 
 		try {
+			// Ensure language detection is complete
+			await detectLanguage(inputText);
+
+			// Fallback: If detectedLanguage is not "en", check for common English words
+			if (detectedLanguage !== "en") {
+				const commonEnglishWords = [
+					"the",
+					"and",
+					"of",
+					"to",
+					"a",
+					"in",
+					"that",
+					"it",
+					"is",
+					"was",
+				];
+				const isLikelyEnglish = commonEnglishWords.some((word) =>
+					inputText.toLowerCase().includes(word)
+				);
+
+				if (isLikelyEnglish) {
+					setDetectedLanguage("en");
+				} else {
+					setError(
+						"Summarize only works for English text during the origin trial."
+					);
+					return;
+				}
+			}
+
+			// Proceed with summarization
 			if ("ai" in self && "summarizer" in self.ai) {
 				const summarizer = await self.ai.summarizer.create();
 				const summaryResult = await summarizer.summarize(inputText);
@@ -143,14 +168,13 @@ const App = () => {
 					},
 				]);
 				setInputText("");
-				setWordCount(0);
 			}
 		} catch (err) {
 			setError("An error occurred while summarizing the text.");
 		} finally {
 			setIsLoading(false);
 		}
-	}, [inputText, wordCount, detectedLanguage]);
+	}, [inputText, wordCount, detectedLanguage, detectLanguage]);
 
 	const handleTranslate = useCallback(async () => {
 		if (!inputText.trim()) {
