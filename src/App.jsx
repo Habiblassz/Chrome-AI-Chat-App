@@ -199,25 +199,39 @@ const App = () => {
 		setIsLoading(true);
 
 		try {
-			if (!detectedLanguage) {
-				await detectLanguage(inputText);
+			const latestInput = inputText;
+			const targetLanguage = selectedLanguage;
+
+			let detectedLang = detectedLanguage;
+			if (!detectedLang) {
+				if ("ai" in self && "languageDetector" in self.ai) {
+					const languageDetector = await self.ai.languageDetector.create();
+					const detectionResults = await languageDetector.detect(latestInput);
+					detectedLang = detectionResults[0]?.detectedLanguage || "unknown";
+					setDetectedLanguage(detectedLang);
+				} else {
+					setError("Language detection is not supported.");
+					return;
+				}
 			}
 
-			const sourceLang = detectedLanguage || "en";
-
-			if (sourceLang === selectedLanguage) {
+			// Prevent translating if source and target languages are the same
+			if (detectedLang === targetLanguage) {
 				const timestamp = new Date().toLocaleTimeString([], {
 					hour: "2-digit",
 					minute: "2-digit",
 				});
+
 				setMessages((prev) => [
 					...prev,
 					{
-						text: inputText,
+						text: latestInput,
 						sender: "ai",
 						timestamp,
+						language: detectedLang,
 					},
 				]);
+
 				setInputText("");
 				setWordCount(0);
 				return;
@@ -225,43 +239,28 @@ const App = () => {
 
 			// Proceed with translation
 			if ("ai" in self && "translator" in self.ai) {
-				// Check if the language pair is supported
-				const translatorCapabilities = await self.ai.translator.capabilities();
-				const languagePairSupport =
-					translatorCapabilities.languagePairAvailable(
-						sourceLang,
-						selectedLanguage
-					);
-
-				if (!languagePairSupport) {
-					setError(
-						`Translation from ${sourceLang} to ${selectedLanguage} is not supported.`
-					);
-					return;
-				}
-
-				// Create the translator
 				const translator = await self.ai.translator.create({
-					sourceLanguage: sourceLang,
-					targetLanguage: selectedLanguage,
+					sourceLanguage: detectedLang,
+					targetLanguage: targetLanguage, // Use captured latest selected language
 				});
 
-				// Translate the text
-				const translationResult = await translator.translate(inputText);
+				const translationResult = await translator.translate(latestInput);
 
-				// Display the final translation
 				const timestamp = new Date().toLocaleTimeString([], {
 					hour: "2-digit",
 					minute: "2-digit",
 				});
+
 				setMessages((prev) => [
 					...prev,
 					{
 						text: translationResult,
 						sender: "ai",
 						timestamp,
+						language: targetLanguage, // Save the translated language
 					},
 				]);
+
 				setInputText("");
 				setWordCount(0);
 			} else {
@@ -272,7 +271,7 @@ const App = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [inputText, detectedLanguage, selectedLanguage, detectLanguage]);
+	}, [inputText, detectedLanguage, selectedLanguage]);
 
 	const handleClear = useCallback(() => {
 		setInputText("");
