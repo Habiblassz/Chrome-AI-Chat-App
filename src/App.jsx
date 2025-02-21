@@ -57,22 +57,6 @@ const App = () => {
 		setWordCount(words.length);
 	};
 
-	const detectLanguage = useCallback(async (text) => {
-		if (!text.trim()) return;
-
-		try {
-			if ("ai" in self && "languageDetector" in self.ai) {
-				const languageDetector = await self.ai.languageDetector.create();
-				const detectionResults = await languageDetector.detect(text);
-				setDetectedLanguage(detectionResults[0].detectedLanguage);
-			} else {
-				setError("Language detection is not supported in this environment.");
-			}
-		} catch (err) {
-			setError("An error occurred while detecting the language.");
-		}
-	}, []);
-
 	const handleSend = useCallback(async () => {
 		setError("");
 		if (!inputText.trim()) {
@@ -198,7 +182,7 @@ const App = () => {
 			const latestInput = inputText;
 			const targetLanguage = selectedLanguage;
 
-			let detectedLang = detectedLanguage;
+			let detectedLang;
 			if (!detectedLang) {
 				if ("ai" in self && "languageDetector" in self.ai) {
 					const languageDetector = await self.ai.languageDetector.create();
