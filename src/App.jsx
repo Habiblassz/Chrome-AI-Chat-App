@@ -83,20 +83,31 @@ const App = () => {
 		setIsLoading(true);
 
 		try {
+			const latestInput = inputText; // Capture latest input value before async operation
+			let detectedLang = "";
+			if ("ai" in self && "languageDetector" in self.ai) {
+				const languageDetector = await self.ai.languageDetector.create();
+				const detectionResults = await languageDetector.detect(latestInput);
+				detectedLang = detectionResults[0]?.detectedLanguage || "unknown";
+			} else {
+				detectedLang = "unsupported";
+			}
+
 			const timestamp = new Date().toLocaleTimeString([], {
 				hour: "2-digit",
 				minute: "2-digit",
 			});
+
 			setMessages((prev) => [
 				...prev,
 				{
-					text: inputText,
+					text: latestInput,
 					sender: "user",
 					timestamp,
+					language: detectedLang,
 				},
 			]);
 
-			await detectLanguage(inputText);
 			setInputText("");
 			setWordCount(0);
 		} catch (err) {
@@ -104,7 +115,7 @@ const App = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [inputText, detectLanguage]);
+	}, [inputText]);
 
 	const handleSummarize = useCallback(async () => {
 		setError("");
@@ -318,6 +329,7 @@ const App = () => {
 									}`}>
 									<div className="message-content">
 										<p>{msg.text}</p>
+										<p>{msg.language}</p>
 										<span className="timestamp">{msg.timestamp}</span>
 									</div>
 								</div>
