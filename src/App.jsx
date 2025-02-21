@@ -74,7 +74,7 @@ const App = () => {
 	}, []);
 
 	const handleSend = useCallback(async () => {
-		setError(""); // Clear error state
+		setError("");
 		if (!inputText.trim()) {
 			setError("Please enter some text.");
 			return;
@@ -83,7 +83,7 @@ const App = () => {
 		setIsLoading(true);
 
 		try {
-			const latestInput = inputText; // Capture latest input value before async operation
+			const latestInput = inputText;
 			let detectedLang = "";
 			if ("ai" in self && "languageDetector" in self.ai) {
 				const languageDetector = await self.ai.languageDetector.create();
@@ -119,6 +119,7 @@ const App = () => {
 
 	const handleSummarize = useCallback(async () => {
 		setError("");
+
 		if (wordCount < 150) {
 			setError("Summarize requires at least 150 words.");
 			return;
@@ -127,56 +128,51 @@ const App = () => {
 		setIsLoading(true);
 
 		try {
-			await detectLanguage(inputText); // Ensure language detection is complete
-			if (!detectedLanguage) {
-				setError("Unable to detect language.");
-				return;
-			}
+			const latestInput = inputText.trim();
+			let detectedLang;
 
-			// Fallback: If detectedLanguage is not "en", check for common English words
-			if (detectedLanguage !== "en") {
-				const commonEnglishWords = [
-					"the",
-					"and",
-					"of",
-					"to",
-					"a",
-					"in",
-					"that",
-					"it",
-					"is",
-					"was",
-				];
-				const isLikelyEnglish = commonEnglishWords.some((word) =>
-					inputText.toLowerCase().includes(word)
+			if ("ai" in self && "languageDetector" in self.ai) {
+				const languageDetector = await self.ai.languageDetector.create();
+				const detectionResults = await languageDetector.detect(latestInput);
+				detectedLang = detectionResults[0]?.detectedLanguage || "unknown";
+
+				const normalizedLang = detectedLang.toLowerCase().replace(/[_-]/g, "");
+				const isEnglish = ["en", "enus", "eng", "english"].includes(
+					normalizedLang
 				);
 
-				if (isLikelyEnglish) {
-					setDetectedLanguage("en");
-				} else {
+				// console.log("Detected language:", detectedLang);
+
+				if (!isEnglish) {
 					setError(
-						"Summarize only works for English text during the origin trial."
+						`Summarization only works for English text. Detected: ${detectedLang}`
 					);
 					return;
 				}
+			} else {
+				setError("Language detection is not supported.");
+				return;
 			}
 
 			if ("ai" in self && "summarizer" in self.ai) {
 				const summarizer = await self.ai.summarizer.create();
-				const summaryResult = await summarizer.summarize(inputText);
+				const summaryResult = await summarizer.summarize(latestInput);
 
 				const timestamp = new Date().toLocaleTimeString([], {
 					hour: "2-digit",
 					minute: "2-digit",
 				});
+
 				setMessages((prev) => [
 					...prev,
 					{
 						text: summaryResult,
 						sender: "ai",
 						timestamp,
+						language: "en",
 					},
 				]);
+
 				setInputText("");
 				setWordCount(0);
 			} else {
@@ -187,7 +183,7 @@ const App = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [inputText, wordCount, detectedLanguage, detectLanguage]);
+	}, [inputText, wordCount]);
 
 	const handleTranslate = useCallback(async () => {
 		setError("");
